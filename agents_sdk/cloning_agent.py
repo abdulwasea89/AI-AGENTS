@@ -12,12 +12,11 @@ external_client = AsyncOpenAI(
 llm_model: OpenAIChatCompletionsModel = OpenAIChatCompletionsModel(
     model="gemini-2.5-flash",
     openai_client=external_client
-)   
+)
 
 agent = Agent(name="Assistant", instructions="You are a helpful assistant",  model=llm_model)
 agent_02 = agent.clone(name="Assistant_02", instructions="You are a helpful RAG Asistant",  model=llm_model)
 
 runner = Runner.run_sync(starting_agent=agent_02, input="What Type of area you specilized In?")
-
 
 print("AGENT RESPONSE: " , runner.final_output)
