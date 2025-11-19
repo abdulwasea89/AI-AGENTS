@@ -14,6 +14,7 @@ llm_model: OpenAIChatCompletionsModel = OpenAIChatCompletionsModel(
     openai_client=external_client
 )
 
+
 agent = Agent(name="Assistant", instructions="You are a helpful assistant",  model=llm_model)
 agent_02 = agent.clone(name="Assistant_02", instructions="You are a helpful RAG Asistant",  model=llm_model)
 
