@@ -1,0 +1,2808 @@
+{
+  "name": "Restuardant",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "id": "1d5ad7b3-ab76-4eb3-a747-ed1f67f53ea4",
+      "name": "WhatsApp Trigger",
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "position": [
+        160,
+        544
+      ],
+      "webhookId": "0b1b3a9b-2f6a-4f5a-8385-6365d96f4802",
+      "typeVersion": 1,
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "48I0HlDP2mXZEJFS",
+          "name": "WhatsApp OAuth account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "operation": "mediaUrlGet",
+        "mediaGetId": "={{ $json.audio.id }}"
+      },
+      "id": "c15f7998-209f-44e2-b3e6-40498b2013d9",
+      "name": "Get Audio URL",
+      "type": "n8n-nodes-base.whatsApp",
+      "position": [
+        1072,
+        48
+      ],
+      "typeVersion": 1,
+      "webhookId": "e543aa3e-d306-4d22-9fd6-cb2cf13d3242",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "oliHxjuzo6DN9pI2",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsAppApi",
+        "options": {}
+      },
+      "id": "81ad1650-ce7d-486d-9468-bb405e0edb3d",
+      "name": "Download Audio",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1296,
+        48
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "oliHxjuzo6DN9pI2",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v20.0/{{ $json[\"id\"] }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsAppApi",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "dbd3e7d5-fa08-49f7-9498-c8aaf461a580",
+      "name": "Download Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1136,
+        432
+      ],
+      "typeVersion": 4.2,
+      "retryOnFail": false,
+      "alwaysOutputData": false,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "oliHxjuzo6DN9pI2",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=whatsapp-tutorial-{{ $json.from }}"
+      },
+      "id": "6f1f4260-1819-4b5e-8f3d-59c45a3d2ffb",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        2832,
+        592
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d990cbd6-a408-4ec4-a889-41be698918d9",
+              "name": "message_type",
+              "type": "string",
+              "value": "={{ $('Split Out Message Parts').item.json.type }}"
+            },
+            {
+              "id": "23b785c3-f38e-4706-80b7-51f333bba3bd",
+              "name": "message_text",
+              "type": "string",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "id": "6e83f9a7-cf75-4182-b2d2-3151e8af76b9",
+              "name": "from",
+              "type": "string",
+              "value": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}"
+            },
+            {
+              "id": "da4b602a-28ca-4b0d-a747-c3d3698c3731",
+              "name": "message_caption",
+              "type": "string",
+              "value": "={{ $('Redirect Message Types').item.json.video && $('Redirect Message Types').item.json.video.caption || '' }}\n{{ $('Redirect Message Types').item.json.image && $('Redirect Message Types').item.json.image.caption || ''}}\n{{ $('Redirect Message Types').item.json.audio && $('Redirect Message Types').item.json.audio.caption || ''}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "087e3cce-deca-4d97-92b1-a953015a0304",
+      "name": "Get User's Message",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2512,
+        400
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "messages",
+        "options": {}
+      },
+      "id": "450e12b7-280f-4551-a89d-b61538b908bf",
+      "name": "Split Out Message Parts",
+      "type": "n8n-nodes-base.splitOut",
+      "position": [
+        448,
+        384
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $json.type == 'audio' && Boolean($json.audio) }}",
+                    "rightValue": "audio"
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Audio Message"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "05b30af4-967b-4824-abdc-84a8292ac0e5",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $json.type == 'image' && Boolean($json.image) }}",
+                    "rightValue": ""
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Image Message"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Text Message"
+        }
+      },
+      "id": "4422adf8-f037-455f-ae6f-7db2e68ebaa7",
+      "name": "Redirect Message Types",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        656,
+        464
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "amount": 0
+      },
+      "id": "8ccc0c10-d829-4874-98b9-a29173cdbaff",
+      "name": "Get Text",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        1088,
+        752
+      ],
+      "webhookId": "99b49c83-d956-46d2-b8d3-d65622121ad9",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "726814870518459",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "id": "f7936583-df2b-4f60-a203-ad29fc9d5ba9",
+      "name": "Respond to User",
+      "type": "n8n-nodes-base.whatsApp",
+      "position": [
+        5840,
+        400
+      ],
+      "typeVersion": 1,
+      "webhookId": "572837d0-ac33-42a1-8cb8-0b8830deeacb",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "oliHxjuzo6DN9pI2",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Here is an image sent by the user. Describe the image and transcribe any text visible in the image.\n\n\n",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=Check the image that image is about these:\n- Inventory \n- CashRegister\n- Reservations\n- Performance\n\nDonot change the words and also explain the image in very deetailed and very deetailed in another para and also write the same words and exact words in the image"
+            },
+            {
+              "type": "HumanMessagePromptTemplate",
+              "messageType": "imageBinary"
+            }
+          ]
+        }
+      },
+      "id": "a10164b8-a10b-420d-bf11-e8d27ba29d4d",
+      "name": "Image Explainer",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        1424,
+        400
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "id": "2811035e-762c-4212-8846-2012af4da623",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        2736,
+        560
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "OyoWanw3E79umDXl",
+          "name": "Google Gemini(PaLM) Api account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-002:generateContent",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googlePalmApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n{\n  \"contents\": [{\n    \"parts\":[\n      {\"text\": \"Transcribe this audio\"},\n      {\"inlineData\": {\n        \"mimeType\": `audio/${$binary.data.fileExtension}`,\n        \"data\": $input.item.binary.data.data }\n      }\n    ]\n  }]\n}\n}}",
+        "options": {}
+      },
+      "id": "5af8bbb0-e983-4495-96b9-5414cd2ce06a",
+      "name": "Google Gemini Audio",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1520,
+        48
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "OyoWanw3E79umDXl",
+          "name": "Google Gemini(PaLM) Api account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "id": "bd616921-7eff-4a36-b0ac-149772a277e2",
+      "name": "Google Gemini Chat Model1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        1440,
+        576
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "OyoWanw3E79umDXl",
+          "name": "Google Gemini(PaLM) Api account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "id": "2de151fa-57d0-4d90-ad07-a4a405635850",
+      "name": "Google Gemini Chat Model2",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        1744,
+        928
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "OyoWanw3E79umDXl",
+          "name": "Google Gemini(PaLM) Api account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2ec0e573-373b-4692-bfae-86b6d3b9aa9a",
+              "name": "text",
+              "type": "string",
+              "value": "={{ $json.candidates[0].content.parts[0].text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "14663633-eeff-4aa9-a83b-2266bd55dfc5",
+      "name": "Format Response1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1808,
+        48
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text.body || $json.text }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Summarize the user's message succinctly."
+            }
+          ]
+        }
+      },
+      "id": "a5ffb10a-b838-4b8b-a307-0ab13ee16163",
+      "name": "Text Summarizer",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        1744,
+        752
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=The user sent the following message\nmessage type: {{ $json.message_type }}\nmessage text or description:\n{{ $json.message_text }}",
+        "options": {
+          "systemMessage": "=You are the Orchestrator Agent for a Restaurant Operations Assistant. \nYour job is to read a WhatsApp message, decide the correct intent, and tell n8n which sub-agent should process it.\n\n# Supported Intents and Sub-Agents\n- inventory → handled by Inventory Agent\n- cash_closing → handled by Cash Closing Agent\n- reservation → handled by Reservation Agent\n- performance → handled by Performance Agent\n- document_upload → handled by Document Upload Agent\n- general → handled by general agent\n\n# Your Goals\n1. Read the incoming WhatsApp message text/caption.\n2. Classify it into exactly one intent from the list above.\n3. Output a JSON command telling n8n which sub-agent should be called next.\n4. Do not extract fields yourself — sub-agents will handle that.\n5. Keep output short, strict JSON.\n\n# Output Format\n{\n  \"intent\": \"reservation\",\n  \"next_agent\": \"Reservation Agent\",\n  \"confidence\": 0.94\n}"
+        }
+      },
+      "id": "68d40f03-6853-4bb1-b3ed-09d72cfd4ac8",
+      "name": "Orchestrator",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        2736,
+        400
+      ],
+      "typeVersion": 1.6
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        3088,
+        576
+      ],
+      "id": "27f95117-3567-4c06-82ce-e1fd5ea89160",
+      "name": "Google Gemini Chat Model3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "OyoWanw3E79umDXl",
+          "name": "Google Gemini(PaLM) Api account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.next_agent }}",
+                    "rightValue": "general agent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "42c54ba2-fa56-491d-a1e4-306c50154539"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "General Agent"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "04d65d35-7f15-4bb5-b2f6-cced7f3af9f9",
+                    "leftValue": "={{ $json.output.next_agent }}",
+                    "rightValue": "Inventory Agent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Inventory Agent"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "52488c1b-eb91-404b-a7b9-1a7eb3e3b73c",
+                    "leftValue": "={{ $json.output.next_agent }}",
+                    "rightValue": "Cash Closing Agent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Cash Closing Agent"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1dab3089-265f-4a57-b7c5-79fd0faeace8",
+                    "leftValue": "={{ $json.output.next_agent }}",
+                    "rightValue": "Reservation Agent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Reservation Agent"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5613b0c4-fc40-4b82-9919-5b6fb72ca5c8",
+                    "leftValue": "={{ $json.output.next_agent }}",
+                    "rightValue": "Performance Agent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Performance Agent"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d75db80a-1591-4574-8c7f-7a08136537ce",
+                    "leftValue": "={{ $json.output.next_agent }}",
+                    "rightValue": "Document Upload Agent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Document Upload Agent"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        3456,
+        336
+      ],
+      "id": "82c5f1c4-75c5-486c-9e88-3d36ae09db3b",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "text": "You specialize in extracting entities.\nExtract the following and properly",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "intent",
+              "description": "=Extract the intent from this:  {{ $json.output }}",
+              "required": true
+            },
+            {
+              "name": "next_agent",
+              "description": "=Exract the next_agent attriute form this:  {{ $json.output }}",
+              "required": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        3088,
+        400
+      ],
+      "id": "40b0e8e4-0915-4e92-be69-8c9bc6ef8102",
+      "name": "Intent and Agent HandOffs"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a Helpfull Ai Assistant\n\nUser Message: {{ $('Get User\\'s Message').item.json.message_text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        3760,
+        -368
+      ],
+      "id": "8fdc68e7-01e9-4e7c-9bed-0c04dcf0c67c",
+      "name": "General Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        3760,
+        -224
+      ],
+      "id": "88414813-d03f-483e-9954-55c46bcbda33",
+      "name": "Google Gemini Chat Model4",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "OyoWanw3E79umDXl",
+          "name": "Google Gemini(PaLM) Api account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "75f714a4-18da-462b-9843-e7a4ad8b68a5",
+              "name": "output",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4624,
+        -368
+      ],
+      "id": "f0d2d7eb-964b-461d-9aee-eee0c7d38b24",
+      "name": "Get Agent Message"
+    },
+    {
+      "parameters": {
+        "numberInputs": 6
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        5600,
+        336
+      ],
+      "id": "9970dd20-c02a-4349-a563-7ff9c4fdefbe",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "text": "=Extract the entities from the user message:\n{{ $if($(\"Text Summarizer\").isExecuted, $(\"Text Summarizer\").item.json.text, $(\"Get User's Message\").item.json.message_text) }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "Product Name",
+              "description": "=Extract the name of the Product from this :\n{{ $(\"Get User's Message\").item.json.message_text || $('WhatsApp Trigger').item.json.messages[0].text.body }}\n",
+              "required": true
+            },
+            {
+              "name": "Quantity",
+              "description": "=Extract the qunatity from this (note: only extract the numerical value, not the unit):\n\n{{ $(\"Get User's Message\").item.json.message_text || $('WhatsApp Trigger').item.json.messages[0].text.body }}\n",
+              "required": true
+            },
+            {
+              "name": "Unit",
+              "description": "=Extract the Unit of the Quantity from this :\n{{ $(\"Get User's Message\").item.json.message_text || $('WhatsApp Trigger').item.json.messages[0].text.body }}\n",
+              "required": true
+            },
+            {
+              "name": "Note",
+              "description": "=\nExtract the notes from this:\n{{ $(\"Get User's Message\").item.json.message_text || $('WhatsApp Trigger').item.json.messages[0].text.body }}\n"
+            },
+            {
+              "name": "Minimum threshold",
+              "description": "=Extract the Minimum threshold (if available):\n{{ $(\"Get User's Message\").item.json.message_text || $('WhatsApp Trigger').item.json.messages[0].text.body }}\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        3744,
+        -32
+      ],
+      "id": "11b8dc0a-0c9b-4f5e-837a-04b15de40c7a",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        3744,
+        128
+      ],
+      "id": "fc2d1f5d-408f-46a5-a813-9df2a3f00db7",
+      "name": "Google Gemini Chat Model5",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "OyoWanw3E79umDXl",
+          "name": "Google Gemini(PaLM) Api account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=This is the Information of the product to be added:\nproduct name: {{ $json.output['Product Name'] }}\nquantity: {{ $json.output.Quantity }}\nunit: {{ $json.output.Unit }}\nnote: {{ $json.output.Note }}\nthreshold: {{ $json.output['Minimum threshold'] }}\n\nUser message: {{ $if($(\"Text Summarizer\").isExecuted, $(\"Text Summarizer\").item.json.text, $(\"Get User's Message\").item.json.message_text) }}",
+        "options": {
+          "systemMessage": "=# System Prompt: Inventory Assistant\n\nYou are a helpful Inventory Assistant.  \nYou specialize in adding, updating, and checking product information in a structured way.  \n\n# Tools\n- google_sheet_read: Use this to check the sheet for product details, quantities, and minimum thresholds.  \n- add_update_products: Use this to add or update a product. Always provide structured fields.  \n\n# Data Fields\nEach product record must include:  \n- Product (name only, no extra adjectives)  \n- Quantity (numeric only)  \n- Unit (kg, pcs, liters, etc.)  \n- Minimum threshold (if available in the user message)\n- Note (optional, for extra details such as \"good quality\")  \n- Drive photo (optional link)  \n\n# Rules & Workflow\n1. Always extract structured values from user input.  \n   - Example: “30kg of good quality ginger” →  \n     Product: Ginger | Quantity: 30 | Unit: kg | Note: good quality.  \n2. Never pass unstructured or combined text into tool calls.  \n3. Always check stock first with google_sheet_read.  \n4. If Quantity < Minimum Threshold → Alert: Stock is Low.  \n5. When adding/updating, confirm the entry with clear staff message:  \n   - Show all structured fields.  \n   - Add Alert if stock is below threshold.  \n6. If details are missing (e.g., no quantity or no product name), politely ask the user to clarify.  \n7. Keep messages professional, clear, and actionable.  \n8. When user say do to the task, then do the task not the other (e.g: i say to change thw quantity of the tomatoes then change the quantity not the others)\n\n# Example Behaviors\n- User: “Add 30kg of good quality ginger”  \n  - Extract → Product: Ginger | Quantity: 30 | Unit: kg | Note: good quality.  \n  - Call add_update_products with structured fields.  \n  - Reply:  \n    ✅ Added product: Ginger  \n    Quantity: 30kg | Threshold: 50kg | Note: good quality  \n    ⚠️ Alert: Stock is still below threshold!  \n\n- User: “Check potatoes”  \n  - Call google_sheet_read.  \n  - Reply:  \n    📦 Potatoes: 5kg in stock. Threshold: 10kg.  \n    ⚠️ Alert: Stock is Low.  \n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        4496,
+        -32
+      ],
+      "id": "a3f9324a-5167-4720-bb61-4e0f5e227cb6",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        4496,
+        128
+      ],
+      "id": "4d98f02a-df77-4b13-a088-6e59808a557f",
+      "name": "Google Gemini Chat Model6",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "OyoWanw3E79umDXl",
+          "name": "Google Gemini(PaLM) Api account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg",
+          "mode": "list",
+          "cachedResultName": "Restudant",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Inventory",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Product": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Product__using_to_match_', ``, 'string') }}",
+            "Date": "={{ $('WhatsApp Trigger').item.json.messages[0].timestamp }}",
+            "User": "={{ $('WhatsApp Trigger').item.json.contacts[0].profile.name }}",
+            "Quantity": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Quantity', ``, 'string') }}",
+            "Unit": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Unit', ``, 'string') }}",
+            "Note": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Note', ``, 'string') }}",
+            "Minimum threshold": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Minimum_threshold', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "Product"
+          ],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "User",
+              "displayName": "User",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Product",
+              "displayName": "Product",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Quantity",
+              "displayName": "Quantity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Unit",
+              "displayName": "Unit",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Minimum threshold",
+              "displayName": "Minimum threshold",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Note",
+              "displayName": "Note",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Drive photo",
+              "displayName": "Drive photo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        4960,
+        80
+      ],
+      "id": "7b1e2fae-b4bd-4442-81ff-af71ec5c743b",
+      "name": "add_update_products",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JzInedcQg0ReFuJV",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg",
+          "mode": "list",
+          "cachedResultName": "Restudant",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Inventory",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        4816,
+        80
+      ],
+      "id": "5e1eef26-793a-4ba1-8115-b8cfb63c3193",
+      "name": "read_products",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JzInedcQg0ReFuJV",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "=Extract the entities from the user message:\n{{ $if($(\"Text Summarizer\").isExecuted, $(\"Text Summarizer\").item.json.text, $(\"Get User's Message\").item.json.message_text) }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "Manager",
+              "description": "=Extract the Manager Name form this:\n{{ $(\"Get User's Message\").item.json.message_text || $('WhatsApp Trigger').item.json.messages[0].text.body }}\n",
+              "required": true
+            },
+            {
+              "name": "Card",
+              "description": "=Extract the Card ammount from this:\n{{ $(\"Get User's Message\").item.json.message_text || $('WhatsApp Trigger').item.json.messages[0].text.body }}\n ",
+              "required": true
+            },
+            {
+              "name": "Cash",
+              "description": "=Extract the Cash from this:\n{{ $(\"Get User's Message\").item.json.message_text || $('WhatsApp Trigger').item.json.messages[0].text.body }}\n",
+              "required": true
+            },
+            {
+              "name": "Meal vouchers",
+              "description": "=Extract the Meal Couchers from this:\n{{ $(\"Get User's Message\").item.json.message_text || $('WhatsApp Trigger').item.json.messages[0].text.body }}\n",
+              "required": true
+            },
+            {
+              "name": "Notes",
+              "description": "=Extract the Notes from this:\n{{ $(\"Get User's Message\").item.json.message_text || $('WhatsApp Trigger').item.json.messages[0].text.body }}\n",
+              "required": true
+            },
+            {
+              "name": "ticket",
+              "description": "=Extract the Notes Ticket: {{ $(\"Get User's Message\").item.json.message_text || $('WhatsApp Trigger').item.json.messages[0].text.body }}\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        3760,
+        384
+      ],
+      "id": "10782311-7090-44cf-8c02-72906a2b68ca",
+      "name": "Information Extractor1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        3760,
+        544
+      ],
+      "id": "57693761-af2b-4b2c-a348-f1dcaf89f813",
+      "name": "Google Gemini Chat Model7",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "OyoWanw3E79umDXl",
+          "name": "Google Gemini(PaLM) Api account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# Product Information (Structured)\n- Manager: {{ $('Information Extractor1').item.json.output.Manager }}\n- Card: {{ $('Information Extractor1').item.json.output.Card }}\n- Cash: {{ $('Information Extractor1').item.json.output.Cash }}\n- Meal Vouchers: {{ $('Information Extractor1').item.json.output['Meal vouchers'] }}\n- Notes: {{ $('Information Extractor1').item.json.output.Notes }}\n\n# Original User Message\n{{ $if($(\"Text Summarizer\").isExecuted, $(\"Text Summarizer\").item.json.text, $(\"Get User's Message\").item.json.message_text) }}\n",
+        "options": {
+          "systemMessage": "=# System Prompt: Cash Closing Assistant\n\nYou are a helpful Cash Closing Assistant.\nYou specialize in recording daily cash register closings and checking for discrepancies between declared totals and ticket totals.\n\n# Tools\n- google_sheet_read → Check existing cash closing records.\n- add_update_cash_closing → Add or update a daily cash closing record (always structured).\n\n# Data Fields (per record)\n- User / Manager (person closing)\n- Card Amount (€)\n- Cash Amount (€)\n- Meal Vouchers (€)\n- Declared Total (€) (sum of card + cash + vouchers)\n- Ticket Total (€) (from Z-ticket OCR or provided)\n- Difference (€) (Declared – Ticket)\n- Note (optional, e.g., “No difference found”)\n\n# Rules & Workflow\n1. Always extract structured values from the user’s WhatsApp input.\n   Example: “Cash closing: Card €872, Cash €365, Vouchers €46. Notes: All good.”\n   → Card: 872 | Cash: 365 | Vouchers: 46 | Declared Total: 1283 | Note: All good.\n\n2. Always compare totals:\n   - If Declared = Ticket → ✅ Balanced.\n   - If mismatch → ⚠️ Alert with difference.\n\n3. Save all data with add_update_cash_closing in Google Sheets.\n\n4. Reply to the user with a clear, structured confirmation message.\n   - Include Card, Cash, Vouchers, Declared, Ticket, Notes.\n   - Add alert message if mismatch detected.\n\n5. If any details are missing (e.g., card or cash amount not given), politely ask the user to clarify.\n6. Always send the missmatch and if there is no then say there is no missmatch\n\n# Example Behaviors\n- User Input (no ticket total provided):\n  “Cash closing: Manager Leo, Card €872, Cash €365, Vouchers €46. Notes: All good.”\n\n  Assistant Reply:\n  ✅ Cash closing saved\n  Manager: Leo\n  Card: €872 | Cash: €365 | Vouchers: €46\n  Declared total: €1,283\n  Ticket total: (not provided)\n  Notes: All good\n\n- User Input (ticket total provided):\n  “Cash closing: Manager Leo, Card €872, Cash €365, Vouchers €46, Ticket total €1,250”\n\n  Assistant Reply:\n  ✅ Cash closing saved\n  Manager: Leo\n  Card: €872 | Cash: €365 | Vouchers: €46\n  Declared total: €1,283 | Ticket total: €1,250\n  ⚠️ Alert: Mismatch detected (−€33)\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        4528,
+        384
+      ],
+      "id": "0e3c2b1f-b474-439d-8643-86b992332bfc",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        4528,
+        544
+      ],
+      "id": "7f43ad41-73f1-48f7-9786-6010c16f7c0e",
+      "name": "Google Gemini Chat Model8",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "OyoWanw3E79umDXl",
+          "name": "Google Gemini(PaLM) Api account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg",
+          "mode": "list",
+          "cachedResultName": "Restudant",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1555972977,
+          "mode": "list",
+          "cachedResultName": "Cash Closing",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg/edit#gid=1555972977"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        4784,
+        496
+      ],
+      "id": "2ba4bf1b-3677-4ef6-91ac-37a55c8e1de9",
+      "name": "google_sheet_read",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JzInedcQg0ReFuJV",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg",
+          "mode": "list",
+          "cachedResultName": "Restudant",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1555972977,
+          "mode": "list",
+          "cachedResultName": "Cash Closing",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg/edit#gid=1555972977"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ $('WhatsApp Trigger').item.json.messages[0].timestamp }}",
+            "User": "={{ $('WhatsApp Trigger').item.json.contacts[0].profile.name }}",
+            "Card amount ": "={{ $('Information Extractor1').item.json.output.Card }}",
+            "Cash": "={{ $('Information Extractor1').item.json.output.Cash }}",
+            "Meal vouchers ": "={{ $('Information Extractor1').item.json.output['Meal vouchers'] }}",
+            "Declared total": "={{ $('Code in JavaScript').item.json.declared_total }}",
+            "Ticket total": "={{ $('Information Extractor1').item.json.output.ticket }}",
+            "Difference": "={{ $json.difference }}",
+            "Notes": "={{ $('Information Extractor1').item.json.output.Notes }}"
+          },
+          "matchingColumns": [
+            "Cash"
+          ],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "User",
+              "displayName": "User",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Card amount ",
+              "displayName": "Card amount ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cash",
+              "displayName": "Cash",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Meal vouchers ",
+              "displayName": "Meal vouchers ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Declared total",
+              "displayName": "Declared total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Ticket total",
+              "displayName": "Ticket total",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Difference",
+              "displayName": "Difference",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Drive ticket photo",
+              "displayName": "Drive ticket photo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        4928,
+        496
+      ],
+      "id": "9d263209-62d4-432c-9efe-45d025d8c5b1",
+      "name": "add_update_cash_closing",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JzInedcQg0ReFuJV",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get values\nconst item = $input.first().json.output;\n\n// Helper: strip non-digits and convert to number\nfunction toNumber(value) {\n  if (!value) return 0;\n  return Number(String(value).replace(/[^\\d.-]/g, \"\"));\n}\n\nconst card = toNumber(item.Card);\nconst cash = toNumber(item.Cash);\nconst vouchers = toNumber(item[\"Meal vouchers\"]);\n\n// Calculate declared total\nconst declared_total = card + cash + vouchers;\n\n// Return the result\nreturn {\n  json: {\n    declared_total: declared_total\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4048,
+        384
+      ],
+      "id": "e410e28e-b609-4a65-8613-96cac3418695",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get values\nconst item = $input.first().json.output;\n\n// Helper: strip non-digits and convert to number\nfunction toNumber(value) {\n  if (!value) return 0;\n  return Number(String(value).replace(/[^\\d.-]/g, \"\"));\n}\n\nconst card = toNumber($('Information Extractor1').first().json.output.Card);\nconst cash = toNumber($('Information Extractor1').first().json.output.Cash);\nconst vouchers = toNumber($('Information Extractor1').first().json.output['Meal vouchers']);\nconst ticket = toNumber($('Information Extractor1').first().json.output.ticket)\n// Calculate declared total\nconst declared_total = card + cash + vouchers;\n\nconst difference = declared_total - ticket\n// Return the result\nreturn {\n  json: {\n    difference: difference\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4240,
+        384
+      ],
+      "id": "d19e4a2f-04a7-4554-9276-1aae466d9695",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "text": "You are a Information extractor and extract the entities form this text",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "Name",
+              "description": "=Extract the Name from this message:\n\n{{ $(\"Get User's Message\").item.json.message_text || $('WhatsApp Trigger').item.json.messages[0].text.body }}\n",
+              "required": true
+            },
+            {
+              "name": "Phone Number",
+              "description": "=Extract the Phone number from this:\n\n{{ $(\"Get User's Message\").item.json.message_text || $('WhatsApp Trigger').item.json.messages[0].text.body }}\n",
+              "required": true
+            },
+            {
+              "name": "Number of People",
+              "description": "=Extract the Number of people from this:\n\n{{ $(\"Get User's Message\").item.json.message_text || $('WhatsApp Trigger').item.json.messages[0].text.body }}\n",
+              "required": true
+            },
+            {
+              "name": "Date",
+              "description": "=Extract the Date form this text:\n\n{{ $(\"Get User's Message\").item.json.message_text || $('WhatsApp Trigger').item.json.messages[0].text.body }}\n",
+              "required": true
+            },
+            {
+              "name": "Time",
+              "description": "=Extract the time from this text:\n\n{{ $(\"Get User's Message\").item.json.message_text || $('WhatsApp Trigger').item.json.messages[0].text.body }}\n",
+              "required": true
+            },
+            {
+              "name": "Notes",
+              "description": "=Extract the Notes form this text:\n\n{{ $(\"Get User's Message\").item.json.message_text || $('WhatsApp Trigger').item.json.messages[0].text.body }}\n",
+              "required": true
+            },
+            {
+              "name": "End Time",
+              "description": "=Extract the End time of the Reservation from this text:\n{{ $(\"Get User's Message\").item.json.message_text || $('WhatsApp Trigger').item.json.messages[0].text.body }}\n"
+            }
+          ]
+        },
+        "options": {
+          "systemPromptTemplate": "=You are an expert extraction algorithm.\nOnly extract relevant information from the text.\nIf you do not know the value of an attribute asked to extract, you may omit the attribute's value.\n\nThis is very Strictly that you extract the real values and don't send the empty response (stritly)"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        3744,
+        784
+      ],
+      "id": "993fd8a3-7737-4097-9513-2ef1999bcfc1",
+      "name": "Information Extractor2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        3744,
+        960
+      ],
+      "id": "4d5d29c6-78d0-490f-9b17-727f9f8bf6e2",
+      "name": "Google Gemini Chat Model9",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "OyoWanw3E79umDXl",
+          "name": "Google Gemini(PaLM) Api account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# Reservation Information (Structured)\n- Name: {{ $('Information Extractor2').item.json.output.Name }}\n- Phone: {{ $('Information Extractor2').item.json.output['Phone Number'] }}\n- People: {{ $('Information Extractor2').item.json.output['Number of People'] }}\n- Date: {{ $('Information Extractor2').item.json.output.Date }}\n- Time: {{ $('Information Extractor2').item.json.output.Time }}\n- Notes: {{ $('Information Extractor2').item.json.output.Notes }}\n- EndTime\n\n# Original User Message\n{{ $if($(\"Text Summarizer\").isExecuted, $(\"Text Summarizer\").item.json.text, $(\"Get User's Message\").item.json.message_text) }}\n",
+        "options": {
+          "systemMessage": "=# System Prompt: Reservations Assistant  \n\nYou are a **helpful Reservations Assistant**.  \nYou must always use the provided tools to:  \n- Record customer reservations  \n- Save reservations in Google Sheets  \n\n---\n\n## Tools  \n- **google_sheet_read** → Always check existing reservations in Sheets before confirming.  \n- **add_update_reservation** → Always add or update a reservation in Sheets (never simulate saving).  \n\n---\n\n## Data Fields (per record)  \n- **Reservation Date**  \n- **Customer Name**  \n- **Phone**  \n- **Number of People**  \n- **Time**  \n- **Note** (optional, e.g., “Terrace if possible”)  \n- **End Time** (if provided)  \n\n---\n\n## Workflow & Rules  \n\n### 1. Parse Input  \n- Extract → Name, Phone, People, Date, Time, Notes.  \n- If any required fields (Name, Phone, Date, Time, People) are missing → **ask user for missing details before continuing**.  \n\n### 2. Check Availability  \n- Call **google_sheet_read** for the requested date/time.  \n  - If slot already exists → Reply:  \n    ⚠️ *“That time slot is already reserved, please choose another time.”*  \n\n### 3. Prevent Duplicates  \n- While checking Sheets, also match by:  \n  - Same **Customer Name OR Phone**  \n  - Same **Date & Time**  \n- If duplicate found → Reply:  \n  ⚠️ *“A reservation already exists for this customer.”*  \n  Include full details: Name, Phone, Date, Time, People, Notes.  \n  Ask if the user wants to **update instead**.  \n\n### 4. Save Reservation  \n- If available and no duplicate:  \n  - Call **add_update_reservation** → Save to Google Sheets (“Reservations” tab).  \n\n### 5. Confirm to User  \nAlways reply with:  \n✅ *“Your reservation has been confirmed and saved in Google Sheets.”*  \n\nInclude structured details:  \n- Name  \n- Phone  \n- People  \n- Date  \n- Time  \n- Notes  \n\n---\n\n## Strict Enforcement  \n- ❌ Never assume availability.  \n- ❌ Never confirm without using **google_sheet_read**.  \n- ❌ Never simulate saving.  \n- ✅ Always save in **Google Sheets**.  \n- ✅ Always check for and prevent duplicates.  \n- ✅ Always provide structured fields in responses.  \n- ✅ Always request missing required details.  \n\n---\n\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        4944,
+        784
+      ],
+      "id": "2ebce21b-9387-4ba6-aec0-a353f8d8f85d",
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        4944,
+        960
+      ],
+      "id": "c8ca6ba5-c96c-4af3-8564-7828fe44e4df",
+      "name": "Google Gemini Chat Model10",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "OyoWanw3E79umDXl",
+          "name": "Google Gemini(PaLM) Api account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg",
+          "mode": "list",
+          "cachedResultName": "Restudant",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1842558741,
+          "mode": "list",
+          "cachedResultName": "Reservations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg/edit#gid=1842558741"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        5664,
+        704
+      ],
+      "id": "0d9e449f-caa8-4794-83d1-0a9eed0c218b",
+      "name": "google_sheet_read1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JzInedcQg0ReFuJV",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg",
+          "mode": "list",
+          "cachedResultName": "Restudant",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1842558741,
+          "mode": "list",
+          "cachedResultName": "Reservations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg/edit#gid=1842558741"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Customer name": "={{ $('Information Extractor2').item.json.output.Name }}",
+            "Phone": "={{ $('Information Extractor2').item.json.output['Phone Number'] }}",
+            "Reservation date": "={{ $('Information Extractor2').item.json.output.Date }}",
+            "No. of people": "={{ $('Information Extractor2').item.json.output['Number of People'] }}",
+            "Time": "={{ $('Information Extractor2').item.json.output.Time }}",
+            "Note": "={{ $('Information Extractor2').item.json.output.Notes }}",
+            "Added by ": "={{ $('WhatsApp Trigger').item.json.contacts[0].profile.name }}",
+            "Calendar event": "={{ $json.htmlLink }}"
+          },
+          "matchingColumns": [
+            "Customer name"
+          ],
+          "schema": [
+            {
+              "id": "Reservation date",
+              "displayName": "Reservation date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Customer name",
+              "displayName": "Customer name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "No. of people",
+              "displayName": "No. of people",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Time",
+              "displayName": "Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Note",
+              "displayName": "Note",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Added by ",
+              "displayName": "Added by ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Calendar event",
+              "displayName": "Calendar event",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        5904,
+        688
+      ],
+      "id": "2daf01ca-7513-441d-b258-bc8386031d7f",
+      "name": "add_update_reservation",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JzInedcQg0ReFuJV",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "abdulwasea5678@gmail.com",
+          "mode": "list",
+          "cachedResultName": "abdulwasea5678@gmail.com"
+        },
+        "returnAll": true,
+        "timeMin": "={{ $fromAI('After', ``, 'string') }}",
+        "timeMax": "={{ $fromAI('Before', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        5200,
+        912
+      ],
+      "id": "d22d42ca-2bde-48f2-861c-ce9a60559b6f",
+      "name": "Get many events in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "MLFDqQm1jne1FvHA",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "=Extract the entities form this text:\n{{ $if($(\"Text Summarizer\").isExecuted, $(\"Text Summarizer\").item.json.text, $(\"Get User's Message\").item.json.message_text) }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "Date",
+              "description": "=Extract the Date form this text:\n{{ $(\"Get User's Message\").item.json.message_text || $('WhatsApp Trigger').item.json.messages[0].text.body }}\n",
+              "required": true
+            },
+            {
+              "name": "Covers",
+              "description": "=Extract the covers form this text:\n{{ $(\"Get User's Message\").item.json.message_text || $('WhatsApp Trigger').item.json.messages[0].text.body }}\n",
+              "required": true
+            },
+            {
+              "name": "Total Sales",
+              "description": "=Extract the total sales from this:\n{{ $(\"Get User's Message\").item.json.message_text || $('WhatsApp Trigger').item.json.messages[0].text.body }}\n",
+              "required": true
+            },
+            {
+              "name": "Average ticket",
+              "description": "=Extract the Average Ticket:\n{{ $(\"Get User's Message\").item.json.message_text || $('WhatsApp Trigger').item.json.messages[0].text.body }}\n",
+              "required": true
+            },
+            {
+              "name": "Margin",
+              "description": "=Extract the margin from this:\n\n{{ $(\"Get User's Message\").item.json.message_text || $('WhatsApp Trigger').item.json.messages[0].text.body }}\n",
+              "required": true
+            },
+            {
+              "name": "Notes",
+              "description": "=Extract the notes from this text: \n\n{{ $('WhatsApp Trigger').item.json.messages[0].text.body }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        3728,
+        1152
+      ],
+      "id": "2ba7dc1d-9487-47fc-9ac4-d3cdca4a5fcb",
+      "name": "Information Extractor3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        3728,
+        1328
+      ],
+      "id": "e4a3f7c5-7f0e-48f6-83b4-c8117cc0b4d8",
+      "name": "Google Gemini Chat Model11",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "OyoWanw3E79umDXl",
+          "name": "Google Gemini(PaLM) Api account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# Reservation Information (Structured)\n- Date: {{ $json.output.Date }}\n- Covers: {{ $json.output.Covers }}\n- Total sales: {{ $json.output['Total Sales'] }}\n- Avg Ticket: {{ $json.output['Average ticket'] }}\n- Margin: {{ $json.output.Margin }}\n- Notes: {{ $json.output.Notes }}\n\n\n# Original User Message\n{{ $if($(\"Text Summarizer\").isExecuted, $(\"Text Summarizer\").item.json.text, $(\"Get User's Message\").item.json.message_text) }}",
+        "options": {
+          "systemMessage": "=# System Prompt: Performance Assistant\n\nYou are the Performance Assistant.  \nYour only job is to process WhatsApp messages about daily restaurant performance and use the correct tools to save the data in Google Sheets.  \n\n# Tools\n- google_sheet_read_performance → Check existing performance records.  \n- add_update_performance → Add or update a performance record in Google Sheets.  \n\n# Data Fields (per record)\n- Date  \n- Covers (number of customers served)  \n- Total Sales (€)  \n- Average Ticket (€ per customer)  \n- Margin (%)  \n- Notes (optional)  \n\n# Rules & Workflow\n1. Always detect if the WhatsApp message is PERFORMANCE related.  \n   Example input:  \n   “Performance today: 120 covers, €2400 sales, avg ticket €20, margin 65%, terrace full.”  \n\n2. Extract:  \n   - Date  \n   - Covers = number of customers  \n   - Total Sales = amount in €  \n   - Average Ticket = amount in €  \n   - Margin = percentage  \n   - Notes = free text  \n\n3. Save the record in Google Sheets:  \n   - Always call add_update_performance with the extracted fields.  \n\n4. If required fields (covers, sales, avg ticket, margin) are missing →  \n   - Do not guess.  \n   - Leave missing fields blank and stop the workflow until clarified.  \n\n# Example Behaviors\n- User Input (all details provided):  \n  “Performance today: 120 customers, €2400 sales, avg ticket €20, margin 65%, terrace full.”  \n\n  Action:  \n  - add_update_performance → save record in 'Performance' sheet.  \n\n- User Input (missing values):  \n  “Performance: €2400 sales, 120 covers.”  \n\n  Action:  \n  - Do not save incomplete record.  \n  - Wait for clarification before saving.  \n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        4560,
+        1152
+      ],
+      "id": "25ed774d-e407-4d0f-8931-62d64450167c",
+      "name": "AI Agent3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        4560,
+        1328
+      ],
+      "id": "d8ddb402-6ed7-4387-b267-fcc68f3e1890",
+      "name": "Google Gemini Chat Model12",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "OyoWanw3E79umDXl",
+          "name": "Google Gemini(PaLM) Api account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg",
+          "mode": "list",
+          "cachedResultName": "Restudant",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1881550080,
+          "mode": "list",
+          "cachedResultName": "Performance",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg/edit#gid=1881550080"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        5248,
+        1264
+      ],
+      "id": "a3f06b03-9f46-4647-bd90-2ce15bb87c0f",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JzInedcQg0ReFuJV",
+          "name": "Google Sheets account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg",
+          "mode": "list",
+          "cachedResultName": "Restudant",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1881550080,
+          "mode": "list",
+          "cachedResultName": "Performance",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FGoT8SACHO1gxoytwQEvQmJuiBZG68mnNLOJQ8pdGdg/edit#gid=1881550080"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ $json.output.Date }}",
+            "No. of covers": "={{ $json.output.Covers }}",
+            "Total turnover": "={{ $json.output['Total Sales'] }}",
+            "Average ticket": "={{ $json.output['Average ticket'] }}",
+            "Margin": "={{ $json.output.Margin }}",
+            "Notes": "={{ $json.output.Notes }}"
+          },
+          "matchingColumns": [
+            "Date"
+          ],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "No. of covers",
+              "displayName": "No. of covers",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total turnover",
+              "displayName": "Total turnover",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Average ticket",
+              "displayName": "Average ticket",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Margin",
+              "displayName": "Margin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        4752,
+        1424
+      ],
+      "id": "f7805c35-fcfd-4347-8288-8a4c6677e699",
+      "name": "Append or update row in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JzInedcQg0ReFuJV",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=test1"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        3872,
+        -192
+      ],
+      "id": "84cf357f-018e-4cb2-81db-0ac17c981742",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "test1"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        4592,
+        176
+      ],
+      "id": "ac101ba9-3989-4d18-bc71-738e21c58c41",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "test1"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        5056,
+        496
+      ],
+      "id": "1702e49d-84c6-4d62-adfd-53c2227f9316",
+      "name": "Simple Memory2"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "test1"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        5488,
+        1264
+      ],
+      "id": "03737078-ef04-4936-accd-b5ae72bc342d",
+      "name": "Simple Memory4"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "test1"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        5424,
+        992
+      ],
+      "id": "24cd59b8-ec1b-4438-99dd-bf228cf34ece",
+      "name": "Simple Memory3"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "abdulwasea5678@gmail.com",
+          "mode": "list",
+          "cachedResultName": "abdulwasea5678@gmail.com"
+        },
+        "start": "={{ DateTime.fromFormat($json.output.Date + ' ' + $json.output.Time, 'MM/dd hh:mm a').set({ year: 2025 }).toUTC().toFormat('yyyy-MM-dd\\'T\\'HH:mm:ss.SSS\\'Z\\'') }}",
+        "end": "={{ DateTime.fromFormat($json.output.Date + ' ' + $json.output.Time, 'MM/dd hh:mm a').set({ year: 2025 }).plus({ hours: 2 }).toUTC().toFormat('yyyy-MM-dd\\'T\\'HH:mm:ss.SSS\\'Z\\'') }}",
+        "additionalFields": {
+          "description": "=\n📞 {{ $json.output['Phone Number'] }}\n\n📝 {{ $json.output.Notes || 'No special request' }}",
+          "summary": "=Table: {{ $json.output.Name }} ({{ $json.output['Number of People'] }} No.of People)"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        4384,
+        784
+      ],
+      "id": "9a348f6f-59d4-47c9-9c1d-114c4792198d",
+      "name": "Create an event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "MLFDqQm1jne1FvHA",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "Extract the words from this ",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "Inventory",
+              "description": "=Extract the \"Inventory\" from this:\n\n{{ $json.text }}"
+            },
+            {
+              "name": "CashRegister",
+              "description": "=Extract the \"CashRegister\" from this:  {{ $json.text }}"
+            },
+            {
+              "name": "Reservations",
+              "description": "=Extract the \"Reservations\" from this:  {{ $json.text }}"
+            },
+            {
+              "name": "Performance",
+              "description": "=Extract the \"Performance\" from this:  {{ $json.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        1728,
+        400
+      ],
+      "id": "40fa0be8-3129-4d8e-bf2f-c0677337695f",
+      "name": "Information Extractor4"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1728,
+        608
+      ],
+      "id": "3118c362-4cf4-459d-8f9e-7a5b06a19bba",
+      "name": "Google Gemini Chat Model13",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "OyoWanw3E79umDXl",
+          "name": "Google Gemini(PaLM) Api account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "operation": "mediaUrlGet",
+        "mediaGetId": "={{ $json.image.id }}"
+      },
+      "id": "7293cb96-7b86-455c-9fcf-1c536d5ceb22",
+      "name": "Get Image URL",
+      "type": "n8n-nodes-base.whatsApp",
+      "position": [
+        944,
+        448
+      ],
+      "typeVersion": 1,
+      "webhookId": "51286a70-fef6-443b-b4c8-f462d0b0d7c6",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "oliHxjuzo6DN9pI2",
+          "name": "WhatsApp account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get Text": {
+      "main": [
+        [
+          {
+            "node": "Text Summarizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Audio URL": {
+      "main": [
+        [
+          {
+            "node": "Download Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Audio": {
+      "main": [
+        [
+          {
+            "node": "Google Gemini Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image": {
+      "main": [
+        [
+          {
+            "node": "Analyze an image",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Image Explainer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image Explainer": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Summarizer": {
+      "main": [
+        [
+          {
+            "node": "Get User's Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response1": {
+      "main": [
+        [
+          {
+            "node": "Get User's Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "Split Out Message Parts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get User's Message": {
+      "main": [
+        [
+          {
+            "node": "Orchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Audio": {
+      "main": [
+        [
+          {
+            "node": "Format Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Orchestrator",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redirect Message Types": {
+      "main": [
+        [
+          {
+            "node": "Get Audio URL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Image URL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out Message Parts": {
+      "main": [
+        [
+          {
+            "node": "Redirect Message Types",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Orchestrator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Image Explainer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Summarizer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Orchestrator": {
+      "main": [
+        [
+          {
+            "node": "Intent and Agent HandOffs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Intent and Agent HandOffs",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "General Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Information Extractor1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Information Extractor2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Information Extractor3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intent and Agent HandOffs": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "General Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "General Agent": {
+      "main": [
+        [
+          {
+            "node": "Get Agent Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Agent Message": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Respond to User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "add_update_products": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read_products": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model7": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model8": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "google_sheet_read": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "add_update_cash_closing": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model9": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor2": {
+      "main": [
+        [
+          {
+            "node": "Create an event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model10": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "google_sheet_read1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "add_update_reservation": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many events in Google Calendar": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model11": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor3",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor3": {
+      "main": [
+        [
+          {
+            "node": "AI Agent3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model12": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent3",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent3",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent3",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent3": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "General Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory2": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory4": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent3",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory3": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event": {
+      "main": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor4": {
+      "main": [
+        [
+          {
+            "node": "Get User's Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model13": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor4",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Download Image",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Rename Keys",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Image Explainer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message": {
+      "main": [
+        [
+          {
+            "node": "Image Explainer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Image URL": {
+      "main": [
+        [
+          {
+            "node": "Download Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "45854f64-4b7e-4ac8-a236-bb6dfa9c22f5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3068572cca952bfe0ca42f87de144b421e5c42f92fc2e6295ea29ca782c09635"
+  },
+  "id": "ZyrZuGUxHqdfS2N4",
+  "tags": []
+}
